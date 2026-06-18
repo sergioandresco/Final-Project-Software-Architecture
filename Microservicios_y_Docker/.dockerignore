@@ -1,0 +1,26 @@
+# Artefactos de compilación
+**/bin/
+**/obj/
+**/out/
+
+# IDE / editores
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+
+# Control de versiones
+.git/
+.gitignore
+
+# Archivos de Docker y docs (no necesarios dentro de la imagen)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+README.md
+**/*.md
+
+# Configuración local y base de datos local
+**/appsettings.Development.json
+**/*.db
+**/*.db-*

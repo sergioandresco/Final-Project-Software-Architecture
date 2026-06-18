@@ -1,0 +1,23 @@
+# Docker Compose para ejecutar el microservicio en local.
+# Uso:  docker compose up --build
+
+services:
+  inventory-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: inventory-service:latest
+    container_name: inventory-service
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Default=Data Source=/data/inventory.db
+    volumes:
+      # Persiste la base SQLite fuera del contenedor.
+      - inventory-data:/data
+    restart: unless-stopped
+
+volumes:
+  inventory-data:

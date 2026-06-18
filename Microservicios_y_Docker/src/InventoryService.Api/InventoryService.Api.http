@@ -1,0 +1,39 @@
+@host = http://localhost:8080
+
+### Listar productos
+GET {{host}}/api/products
+
+### Crear producto
+POST {{host}}/api/products
+Content-Type: application/json
+
+{
+  "sku": "SKU-001",
+  "name": "Ron Añejo 750ml",
+  "description": "Botella de ron añejo",
+  "price": 45000,
+  "quantity": 120
+}
+
+### Obtener por id (reemplaza el GUID)
+GET {{host}}/api/products/00000000-0000-0000-0000-000000000000
+
+### Actualizar (reemplaza el GUID)
+PUT {{host}}/api/products/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "name": "Ron Añejo 750ml",
+  "description": "Edición especial",
+  "price": 48000,
+  "quantity": 100
+}
+
+### Eliminar (reemplaza el GUID)
+DELETE {{host}}/api/products/00000000-0000-0000-0000-000000000000
+
+### Health - liveness
+GET {{host}}/health/live
+
+### Health - readiness
+GET {{host}}/health/ready

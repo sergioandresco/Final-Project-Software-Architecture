@@ -1,0 +1,15 @@
+## Artefactos .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+.vs/
+
+## Base de datos SQLite local
+*.db
+*.db-shm
+*.db-wal
+
+## Configuración local sensible
+appsettings.*.local.json
