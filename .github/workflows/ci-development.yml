@@ -48,3 +48,22 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/inventory-service:dev-${{ github.sha }}
+
+      - name: Create GitHub Pre-Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-${{ github.sha }}
+          name: Dev Build ${{ github.sha }}
+          prerelease: true
+          body: |
+            ## Dev build from branch `development`
+
+            **Commit:** ${{ github.sha }}
+            **Triggered by:** ${{ github.actor }}
+
+            ### Docker image
+            ```
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/inventory-service:dev-${{ github.sha }}
+            ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
