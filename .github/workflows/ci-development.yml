@@ -1,0 +1,44 @@
+name: CI - Development
+
+on:
+  push:
+    branches: [development]
+  pull_request:
+    branches: [development]
+
+jobs:
+  build-and-push:
+    name: Build, Test & Push (dev)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore Microservicios_y_Docker/InventoryService.sln
+
+      - name: Build
+        run: dotnet build Microservicios_y_Docker/InventoryService.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test Microservicios_y_Docker/InventoryService.sln --no-build --configuration Release --verbosity normal
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push Docker image (dev tag)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./Microservicios_y_Docker
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/inventory-service:dev-${{ github.sha }}
