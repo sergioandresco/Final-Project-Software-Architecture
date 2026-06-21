@@ -87,24 +87,32 @@ Api  ──► Infrastructure ──► Application ──► Domain
 ## Estructura del Proyecto
 
 ```text
-InventoryService.sln
-├── Dockerfile
-├── docker-compose.yml
+Microservicios y Docker/
+├── InventoryService.sln
+├── Dockerfile                       
+├── docker-compose.yml               
+├── .dockerignore
+├── .gitignore
 ├── README.md
 └── src/
-    ├── InventoryService.Domain
+    ├── InventoryService.Domain/             
     │   └── Entities/Product.cs
-    ├── InventoryService.Application
-    │   ├── Common/Exceptions
-    │   ├── Products
-    │   └── DependencyInjection.cs
-    ├── InventoryService.Infrastructure
-    │   ├── Persistence
-    │   └── DependencyInjection.cs
-    └── InventoryService.Api
-        ├── Controllers
-        ├── Middleware
-        ├── Program.cs
+    ├── InventoryService.Application/        
+    │   ├── Common/Exceptions/               
+    │   ├── Products/
+    │   │   ├── Dtos/ProductDtos.cs
+    │   │   ├── IProductRepository.cs        
+    │   │   ├── IProductService.cs
+    │   │   └── ProductService.cs            
+    │   └── DependencyInjection.cs           
+    ├── InventoryService.Infrastructure/     
+    │   ├── Persistence/InventoryDbContext.cs
+    │   ├── Persistence/Repositories/ProductRepository.cs
+    │   └── DependencyInjection.cs           
+    └── InventoryService.Api/                
+        ├── Controllers/ProductsController.cs    # controlador delgado
+        ├── Middleware/ExceptionHandlingMiddleware.cs
+        ├── Program.cs                           # raíz de composición
         └── appsettings.json
 ```
 
@@ -237,7 +245,7 @@ replicaCount: 1
 
 image:
   repository: sergiocosu/inventory-service
-  tag: 1.0.0
+  tag: latest
 
 container:
   port: 8080
