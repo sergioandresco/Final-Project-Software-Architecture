@@ -1,0 +1,19 @@
+app:
+  name: inventory-service
+
+replicaCount: 1
+
+image:
+  repository: sergiocosu/inventory-service
+  tag: 1.0.0
+
+container:
+  port: 8080
+
+service:
+  type: ClusterIP
+  port: 8080
+
+health:
+  livenessPath: /health/live
+  readinessPath: /health/ready
