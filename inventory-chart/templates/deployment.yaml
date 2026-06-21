@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: inventory-service
+  name: {{ .Values.app.name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: inventory-service
+      app: {{ .Values.app.name }}
   template:
     metadata:
       labels:
-        app: inventory-service
+        app: {{ .Values.app.name }}
     spec:
       containers:
-      - name: inventory-service
-        image: sergiocosu/inventory-service:1.0.0
-        ports:
-        - containerPort: 8080
-        livenessProbe:
-          httpGet:
-            path: /health/live
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 15
-        readinessProbe:
-          httpGet:
-            path: /health/ready
-            port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 15
+        - name: {{ .Values.app.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.container.port }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.health.livenessPath }}
+              port: {{ .Values.container.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.health.readinessPath }}
+              port: {{ .Values.container.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 15
