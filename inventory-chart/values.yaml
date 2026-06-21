@@ -1,7 +1,7 @@
 app:
   name: inventory-service
 
-replicaCount: 2
+replicaCount: 1
 
 image:
   repository: sergiocosu/inventory-service
