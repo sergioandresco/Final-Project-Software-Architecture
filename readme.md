@@ -1,5 +1,7 @@
 # Inventory Service - Arquitectura de Microservicios con Docker, Kubernetes, Helm, GitHub Actions y ArgoCD
 
+Integrantes: Sergio Cobos, David Vasquez, Juan Sebastian Cuervo, Sebastián Bedoya.
+
 ## Descripción General
 
 Este proyecto implementa un microservicio de inventario desarrollado en **.NET 8**, siguiendo principios de **Clean Architecture**, empaquetado mediante **Docker**, desplegado sobre **Kubernetes (k3d)** y administrado utilizando **Helm** y **ArgoCD** bajo una estrategia **GitOps**.
