@@ -1,5 +1,7 @@
+using InventoryService.Application.Common.Exceptions;
 using InventoryService.Application.Products;
 using InventoryService.Domain.Entities;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryService.Infrastructure.Persistence.Repositories;
@@ -32,6 +34,18 @@ public class ProductRepository : IProductRepository
 
     public void Remove(Product product) => _db.Products.Remove(product);
 
-    public Task<int> SaveChangesAsync(CancellationToken ct = default)
-        => _db.SaveChangesAsync(ct);
+    public async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            return await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueSkuViolation(ex))
+        {
+            throw new ConflictException("Ya existe un producto con el SKU proporcionado.");
+        }
+    }
+
+    private static bool IsUniqueSkuViolation(DbUpdateException ex)
+        => ex.InnerException is SqliteException { SqliteErrorCode: 19 };
 }

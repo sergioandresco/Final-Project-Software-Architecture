@@ -32,6 +32,22 @@ Content-Type: application/json
 ### Eliminar (reemplaza el GUID)
 DELETE {{host}}/api/products/00000000-0000-0000-0000-000000000000
 
+### Ajustar stock: entrada de inventario (reemplaza el GUID)
+PATCH {{host}}/api/products/00000000-0000-0000-0000-000000000000/stock
+Content-Type: application/json
+
+{
+  "delta": 20
+}
+
+### Ajustar stock: salida de inventario (reemplaza el GUID)
+PATCH {{host}}/api/products/00000000-0000-0000-0000-000000000000/stock
+Content-Type: application/json
+
+{
+  "delta": -5
+}
+
 ### Health - liveness
 GET {{host}}/health/live
 
