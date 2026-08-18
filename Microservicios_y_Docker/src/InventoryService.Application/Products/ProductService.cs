@@ -79,6 +79,25 @@ public class ProductService : IProductService
         await _repository.SaveChangesAsync(ct);
     }
 
+    public async Task<ProductDto> AdjustStockAsync(Guid id, AdjustStockRequest request, CancellationToken ct = default)
+    {
+        var product = await _repository.GetByIdAsync(id, ct)
+                      ?? throw NotFoundException.For("producto", id);
+
+        var newQuantity = product.Quantity + request.Delta;
+        if (newQuantity < 0)
+            throw new ConflictException(
+                $"Stock insuficiente para el producto '{product.Sku}': disponibles {product.Quantity}, se solicitó un ajuste de {request.Delta}.");
+
+        product.Quantity = newQuantity;
+        product.UpdatedAtUtc = DateTime.UtcNow;
+
+        _repository.Update(product);
+        await _repository.SaveChangesAsync(ct);
+
+        return ToDto(product);
+    }
+
     private static ProductDto ToDto(Product p) => new(
         p.Id, p.Sku, p.Name, p.Description, p.Price, p.Quantity, p.CreatedAtUtc, p.UpdatedAtUtc);
 }

@@ -138,6 +138,7 @@ Microservicios y Docker/
 | GET    | /api/products/{id} | Obtener producto por ID     |
 | POST   | /api/products      | Crear producto              |
 | PUT    | /api/products/{id} | Actualizar producto         |
+| PATCH  | /api/products/{id}/stock | Ajustar cantidad en inventario (entrada/salida) |
 | DELETE | /api/products/{id} | Eliminar producto           |
 | GET    | /health/live       | Liveness Probe              |
 | GET    | /health/ready      | Readiness Probe             |

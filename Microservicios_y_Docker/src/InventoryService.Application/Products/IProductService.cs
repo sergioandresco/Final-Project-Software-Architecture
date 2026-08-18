@@ -21,4 +21,10 @@ public interface IProductService
 
     /// <summary>Elimina un producto. Lanza NotFoundException si no existe.</summary>
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Ajusta la cantidad en inventario sumando/restando <see cref="AdjustStockRequest.Delta"/>.
+    /// Lanza NotFoundException si no existe y ConflictException si el resultado quedaría negativo.
+    /// </summary>
+    Task<ProductDto> AdjustStockAsync(Guid id, AdjustStockRequest request, CancellationToken ct = default);
 }

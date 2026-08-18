@@ -58,4 +58,16 @@ public class ProductsController : ControllerBase
         await _service.DeleteAsync(id, ct);
         return NoContent();
     }
+
+    /// <summary>
+    /// Ajusta la cantidad disponible de un producto (entradas/salidas de inventario)
+    /// sumando o restando <c>delta</c> a la cantidad actual.
+    /// </summary>
+    [HttpPatch("{id:guid}/stock")]
+    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ProductDto>> AdjustStock(Guid id, AdjustStockRequest request, CancellationToken ct)
+        => Ok(await _service.AdjustStockAsync(id, request, ct));
 }
