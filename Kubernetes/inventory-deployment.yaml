@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: inventory-service
-        image: davidvasbe/inventory-service:1.0.0
+        image: sergiocosu/inventory-service:1.0.0
         ports:
         - containerPort: 8080
         livenessProbe:

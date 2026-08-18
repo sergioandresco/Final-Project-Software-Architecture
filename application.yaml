@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: inventory
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/sergioandresco/Final-Project-Software-Architecture.git
+    targetRevision: main
+    path: inventory-chart
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
