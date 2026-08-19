@@ -1,303 +1,166 @@
-# Inventory Service - Arquitectura de Microservicios con Docker, Kubernetes, Helm, GitHub Actions y ArgoCD
+# Laboratorio técnico: implementación de pipelines CI/CD
 
-Integrantes: Sergio Cobos, David Vasquez, Juan Sebastian Cuervo, Sebastián Bedoya.
+## Actividad 3
 
-Vídeo de demostración: https://youtu.be/anLGjMakibY
-
-## Descripción General
-
-Este proyecto implementa un microservicio de inventario desarrollado en **.NET 8**, siguiendo principios de **Clean Architecture**, empaquetado mediante **Docker**, desplegado sobre **Kubernetes (k3d)** y administrado utilizando **Helm** y **ArgoCD** bajo una estrategia **GitOps**.
-
-Además, se implementó una estrategia de **Integración Continua (CI)** utilizando **GitHub Actions**, con pipelines independientes para los ambientes de desarrollo y producción.
+**Integrantes:** Sergio Cobos, David Vasquez y Sebastián Bedoya Flórez  
+**Asignatura:** `Fundamentos DevOps`
+**Fecha:** `Agosto 2026`
+**Repositorio:** [Final Project Software Architecture](https://github.com/sergioandresco/Final-Project-Software-Architecture)
 
 ---
 
-# Arquitectura General de la Solución
+## 1. Introducción
+
+Este repositorio contiene una aplicación web para la gestión de inventarios y la implementación de una estrategia básica de integración continua y entrega continua (CI/CD).
+
+La aplicación fue desarrollada en **ASP.NET Core 8**, utiliza **Entity Framework Core** y **SQLite** para la persistencia de información, y está organizada siguiendo principios de **Clean Architecture**. Su empaquetado se realiza mediante **Docker**.
+
+Para el laboratorio se configuraron dos pipelines con **GitHub Actions**:
+
+- Un pipeline de integración continua asociado a la rama `development`.
+- Un pipeline de entrega continua asociado a la rama `main`.
+
+Los pipelines automatizan la descarga del código, restauración de dependencias, compilación, ejecución de pruebas, construcción de imágenes Docker, publicación en Docker Hub y creación de versiones en GitHub.
+
+> La aplicación base fue desarrollada previamente por el mismo equipo de trabajo en otro proyecto académico. El alcance de esta actividad se concentra en la estructuración, implementación y documentación de los pipelines CI/CD.
+
+---
+
+## 2. Objetivo del laboratorio
+
+Implementar dos pipelines que automaticen la validación y preparación de entregas de una aplicación web alojada en GitHub:
+
+- **Integración continua (CI):** compilar, probar y validar automáticamente el código ante cambios en el repositorio.
+- **Entrega continua (CD):** construir una imagen Docker versionada y publicarla en un registro, dejándola disponible para su posterior despliegue en diferentes entornos.
+
+---
+
+## 3. Alcance
+
+Para esta implementación se seleccionó **GitHub Actions** como herramienta de automatización tanto para CI como para CD.
+
+La selección permite mantener el código y la automatización dentro del mismo repositorio. Se definió un workflow para validar los cambios integrados en `development` y un segundo workflow para preparar las entregas asociadas a `main`.
+
+El alcance de esta fase termina con:
+
+- La validación automática del código.
+- La ejecución de pruebas automatizadas.
+- La construcción de la imagen Docker.
+- La publicación de la imagen en Docker Hub.
+- La creación de prereleases y releases en GitHub.
+
+El despliegue automático en Kubernetes, la integración de controles de seguridad y la habilitación de monitoreo corresponden a fases posteriores del proyecto.
+
+---
+
+## 4. Descripción de la aplicación
+
+**Inventory Service** es una API REST que permite administrar productos y sus existencias. Las operaciones principales son:
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/api/products` | Consultar todos los productos |
+| `GET` | `/api/products/{id}` | Consultar un producto por identificador |
+| `POST` | `/api/products` | Crear un producto |
+| `PUT` | `/api/products/{id}` | Actualizar un producto |
+| `PATCH` | `/api/products/{id}/stock` | Registrar una entrada o salida de inventario |
+| `DELETE` | `/api/products/{id}` | Eliminar un producto |
+| `GET` | `/health/live` | Validar que el proceso esté activo |
+| `GET` | `/health/ready` | Validar que la aplicación esté lista para atender solicitudes |
+| `GET` | `/swagger` | Consultar la documentación interactiva de la API |
+
+---
+
+## 5. Tecnologías utilizadas
+
+| Tecnología | Propósito |
+|---|---|
+| ASP.NET Core 8 | Desarrollo de la API web |
+| Entity Framework Core | Acceso y persistencia de datos |
+| SQLite | Base de datos de la aplicación |
+| xUnit | Ejecución de pruebas automatizadas |
+| Moq | Simulación de dependencias en las pruebas unitarias |
+| Git y GitHub | Control de versiones y alojamiento del código |
+| GitHub Actions | Automatización de los pipelines CI/CD |
+| Docker | Construcción y empaquetado de la aplicación |
+| Docker Hub | Registro de imágenes Docker |
+| QEMU y Docker Buildx | Construcción de imágenes multiplataforma |
+| Swagger / OpenAPI | Documentación y validación de la API |
+
+---
+
+## 6. Estructura relevante del repositorio
 
 ```text
-┌─────────────────────┐
-│     GitHub Repo     │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│  GitHub Actions CI  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│     Docker Hub      │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│      ArgoCD         │
-│   GitOps Engine     │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│        Helm         │
-│ Package Management  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│    Kubernetes       │
-│       (k3d)         │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Inventory Service   │
-└─────────────────────┘
+.
+├── .github/
+│   └── workflows/
+│       ├── ci-development.yml
+│       └── cd-main.yml
+├── Microservicios_y_Docker/
+│   ├── src/
+│   │   ├── InventoryService.Api/
+│   │   ├── InventoryService.Application/
+│   │   ├── InventoryService.Domain/
+│   │   └── InventoryService.Infrastructure/
+│   ├── tests/
+│   │   └── InventoryService.Tests/
+│   │       ├── Api/Controllers/
+│   │       └── Application/Products/
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── InventoryService.sln
+├── Kubernetes/
+├── inventory-chart/
+├── application.yaml
+└── README.md
+```
+
+Los directorios `Kubernetes`, `inventory-chart` y el archivo `application.yaml` contienen recursos desarrollados previamente y previstos para fases posteriores. Estos elementos no forman parte del alcance evaluado de los pipelines de esta actividad.
+
+---
+
+## 7. Estrategia de ramas
+
+| Rama | Propósito | Automatización asociada |
+|---|---|---|
+| `development` | Integración y validación de cambios en desarrollo | Pipeline CI |
+| `main` | Código estable y generación de entregas versionadas | Pipeline CD |
+
+Los cambios se integran inicialmente en `development`. Después de superar las validaciones automáticas, se crea un pull request hacia `main`. Este pull request vuelve a ejecutar las validaciones definidas en el pipeline CD y, después de su integración, el `push` resultante sobre `main` genera la entrega estable.
+
+---
+
+## 8. Flujo general CI/CD
+
+```mermaid
+flowchart TD
+    A["Cambio de código"] --> B["Push o pull request"]
+    B --> C["Rama development"]
+    C --> D["Pipeline CI"]
+    D --> E["Restore, build y test"]
+    E --> F["Imagen dev-SHA"]
+    F --> G["Pull request hacia main"]
+    G --> H["Pipeline CD"]
+    H --> I["Validación y construcción"]
+    I --> J["Merge y push a main"]
+    J --> K["Imagen versionada y latest"]
+    K --> L["Docker Hub y GitHub Release"]
 ```
 
 ---
 
-# Tecnologías Utilizadas
+## 9. Pipeline de integración continua
 
-| Tecnología            | Propósito                    |
-| --------------------- | ---------------------------- |
-| ASP.NET Core 8        | Desarrollo del microservicio |
-| Entity Framework Core | Persistencia                 |
-| SQLite                | Base de datos                |
-| Docker                | Contenerización              |
-| Docker Hub            | Registro de imágenes         |
-| Kubernetes            | Orquestación                 |
-| k3d                   | Kubernetes local             |
-| Helm                  | Gestión de paquetes          |
-| ArgoCD                | GitOps                       |
-| GitHub Actions        | Integración Continua         |
-| Swagger               | Documentación API            |
+**Archivo:** `.github/workflows/ci-development.yml`  
+**Rama objetivo:** `development`
 
----
+### 9.1 Disparadores
 
-# Arquitectura Limpia (Clean Architecture)
+El pipeline se ejecuta automáticamente cuando:
 
-El proyecto sigue los principios de Clean Architecture, donde las dependencias siempre apuntan hacia el núcleo del negocio.
-
-```text
-Api  ──► Infrastructure ──► Application ──► Domain
-```
-
-| Capa           | Responsabilidad                 |
-| -------------- | ------------------------------- |
-| Domain         | Entidades de negocio            |
-| Application    | Casos de uso, DTOs y contratos  |
-| Infrastructure | Persistencia y acceso a datos   |
-| Api            | Exposición HTTP y configuración |
-
-## Estructura del Proyecto
-
-```text
-Microservicios y Docker/
-├── InventoryService.sln
-├── Dockerfile                       
-├── docker-compose.yml               
-├── .dockerignore
-├── .gitignore
-├── README.md
-└── src/
-    ├── InventoryService.Domain/             
-    │   └── Entities/Product.cs
-    ├── InventoryService.Application/        
-    │   ├── Common/Exceptions/               
-    │   ├── Products/
-    │   │   ├── Dtos/ProductDtos.cs
-    │   │   ├── IProductRepository.cs        
-    │   │   ├── IProductService.cs
-    │   │   └── ProductService.cs            
-    │   └── DependencyInjection.cs           
-    ├── InventoryService.Infrastructure/     
-    │   ├── Persistence/InventoryDbContext.cs
-    │   ├── Persistence/Repositories/ProductRepository.cs
-    │   └── DependencyInjection.cs           
-    └── InventoryService.Api/                
-        ├── Controllers/ProductsController.cs    # controlador delgado
-        ├── Middleware/ExceptionHandlingMiddleware.cs
-        ├── Program.cs                           # raíz de composición
-        └── appsettings.json
-```
-
-## Beneficios
-
-* Separación clara de responsabilidades.
-* Bajo acoplamiento.
-* Alta mantenibilidad.
-* Facilidad para pruebas unitarias.
-* Independencia de frameworks y tecnologías externas.
-
----
-
-# APIs Disponibles
-
-| Método | Endpoint           | Descripción                 |
-| ------ | ------------------ | --------------------------- |
-| GET    | /api/products      | Obtener todos los productos |
-| GET    | /api/products/{id} | Obtener producto por ID     |
-| POST   | /api/products      | Crear producto              |
-| PUT    | /api/products/{id} | Actualizar producto         |
-| PATCH  | /api/products/{id}/stock | Ajustar cantidad en inventario (entrada/salida) |
-| DELETE | /api/products/{id} | Eliminar producto           |
-| GET    | /health/live       | Liveness Probe              |
-| GET    | /health/ready      | Readiness Probe             |
-| GET    | /swagger           | Documentación Swagger       |
-
----
-
-# Contenerización con Docker
-
-## Construcción de Imagen
-
-```bash
-docker build -t inventory-service:1.0.0 .
-```
-
-## Ejecución Local
-
-```bash
-docker run -p 8080:8080 inventory-service:1.0.0
-```
-
-## Publicación en Docker Hub
-
-```bash
-docker tag inventory-service:1.0.0 sergiocosu/inventory-service:1.0.0
-
-docker push sergiocosu/inventory-service:1.0.0
-```
-
-Imagen utilizada:
-
-```text
-sergiocosu/inventory-service:1.0.0
-```
-
----
-
-# Kubernetes
-
-## Creación del Clúster
-
-```bash
-k3d cluster create arquitectura
-```
-
-Validar:
-
-```bash
-kubectl get nodes
-```
-
-## Despliegue Inicial
-
-Aplicar manifiestos Kubernetes:
-
-```bash
-kubectl apply -f Kubernetes/
-```
-
-Validar:
-
-```bash
-kubectl get pods
-kubectl get svc
-```
-
-## Acceso a la Aplicación
-
-```bash
-kubectl port-forward svc/inventory-service 8080:8080
-```
-
-Abrir:
-
-```text
-http://localhost:8080/swagger
-```
-
----
-
-# Helm
-
-Helm fue utilizado para empaquetar y parametrizar el despliegue Kubernetes.
-
-## Creación del Chart
-
-```bash
-helm create inventory-chart
-```
-
-Estructura:
-
-```text
-inventory-chart/
-├── Chart.yaml
-├── values.yaml
-└── templates/
-    ├── deployment.yaml
-    └── service.yaml
-```
-
-## Configuración de Values
-
-```yaml
-app:
-  name: inventory-service
-
-replicaCount: 1
-
-image:
-  repository: sergiocosu/inventory-service
-  tag: latest
-
-container:
-  port: 8080
-
-service:
-  type: ClusterIP
-  port: 8080
-
-health:
-  livenessPath: /health/live
-  readinessPath: /health/ready
-```
-
-## Instalación
-
-```bash
-helm install inventory ./inventory-chart
-```
-
-Actualización:
-
-```bash
-helm upgrade inventory ./inventory-chart
-```
-
-Validar:
-
-```bash
-helm list
-kubectl get pods
-```
-
----
-
-# Integración Continua con GitHub Actions
-
-Se implementaron dos pipelines independientes para soportar los ambientes de desarrollo y producción.
-
-## Pipeline de Desarrollo
-
-Archivo:
-
-```text
-.github/workflows/ci-development.yml
-```
-
-### Trigger
+- Se realiza un `push` sobre `development`.
+- Se crea o actualiza un pull request dirigido a `development`.
 
 ```yaml
 on:
@@ -307,271 +170,253 @@ on:
     branches: [development]
 ```
 
-### Funcionalidades
+### 9.2 Etapas del pipeline CI
 
-* Checkout del código.
-* Configuración de .NET 8.
-* Restore de dependencias.
-* Build de la solución.
-* Ejecución de pruebas.
-* Construcción de imagen Docker.
-* Publicación de imagen Docker de desarrollo.
-* Creación de GitHub Pre-Release.
+| Etapa | Descripción |
+|---|---|
+| Checkout code | Descarga el código del repositorio en el runner |
+| Setup .NET 8 | Instala y configura el SDK de .NET 8 |
+| Restore dependencies | Restaura las dependencias NuGet de la solución |
+| Build | Compila la solución en configuración `Release` |
+| Test | Ejecuta las pruebas automatizadas |
+| Set up QEMU | Habilita la emulación requerida para otras arquitecturas |
+| Set up Docker Buildx | Prepara la construcción de imágenes multiplataforma |
+| Log in to Docker Hub | Autentica el workflow mediante secretos de GitHub |
+| Build & push | Construye y publica la imagen de desarrollo |
+| Create GitHub Pre-Release | Crea una versión preliminar asociada al commit |
 
-### Versionamiento
+### 9.3 Versionamiento de desarrollo
 
-Las imágenes de desarrollo utilizan el SHA del commit:
+Las imágenes generadas en `development` utilizan el SHA del commit para garantizar trazabilidad:
 
 ```text
-sergiocosu/inventory-service:dev-a1b2c3d4
+<usuario-dockerhub>/inventory-service:dev-<SHA-del-commit>
 ```
 
-### Beneficio
-
-Permite validar cambios continuamente sin afectar las versiones estables.
+Este identificador permite relacionar cada imagen con el cambio exacto que la produjo.
 
 ---
 
-## Pipeline de Producción
+## 10. Pruebas automatizadas
 
-Archivo:
+Las pruebas se encuentran en:
 
 ```text
-.github/workflows/cd-main.yml
+Microservicios_y_Docker/tests/InventoryService.Tests/
 ```
 
-### Trigger
+El proyecto utiliza **xUnit**, **Moq** y el SDK de pruebas de .NET. Actualmente la solución contiene métodos de prueba para:
+
+- Operaciones del controlador de productos.
+- Lógica del servicio de productos.
+- Creación, consulta, actualización y eliminación de productos.
+- Entradas y salidas de inventario.
+- Validación de DTO y datos de entrada.
+- Manejo de productos inexistentes.
+- Manejo de solicitudes y operaciones inválidas.
+
+Las pruebas forman parte de `InventoryService.sln` y son ejecutadas automáticamente mediante:
+
+```bash
+dotnet test Microservicios_y_Docker/InventoryService.sln \
+  --no-build \
+  --configuration Release \
+  --verbosity normal
+```
+
+Si alguna prueba falla, el pipeline finaliza con error y evita que el cambio sea considerado válido.
+
+---
+
+## 11. Pipeline de entrega continua
+
+**Archivo:** `.github/workflows/cd-main.yml`  
+**Rama objetivo:** `main`
+
+### 11.1 Disparadores
+
+El pipeline se ejecuta automáticamente cuando:
+
+- Se realiza un `push` sobre `main`.
+- Se crea o actualiza un pull request dirigido a `main`.
 
 ```yaml
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 ```
 
-### Funcionalidades
+### 11.2 Etapas del pipeline CD
 
-* Checkout.
-* Restore.
-* Build.
-* Test.
-* Generación automática de versión.
-* Docker Build.
-* Docker Push.
-* GitHub Release.
+| Etapa | Descripción |
+|---|---|
+| Checkout code | Descarga el repositorio y el historial requerido para consultar tags |
+| Setup .NET 8 | Configura el SDK de .NET 8 |
+| Restore dependencies | Restaura las dependencias de la solución |
+| Build | Compila la aplicación en configuración `Release` |
+| Test | Ejecuta nuevamente las pruebas automatizadas |
+| Generate version | Obtiene el último tag estable e incrementa su componente `patch` |
+| Set up QEMU | Habilita la construcción para múltiples arquitecturas |
+| Set up Docker Buildx | Prepara el constructor de imágenes Docker |
+| Log in to Docker Hub | Autentica el workflow de manera segura |
+| Build & push Docker image | Publica la imagen versionada y la etiqueta `latest` |
+| Create GitHub Release | Crea el tag y el release correspondiente en GitHub |
 
-### Versionamiento Automático
+### 11.3 Versionamiento estable
 
-Ejemplo:
+El workflow consulta el último tag con formato semántico:
 
 ```text
-v1.0.0
-v1.0.1
-v1.0.2
+v<major>.<minor>.<patch>
 ```
 
-### Imágenes Generadas
+Luego incrementa automáticamente el valor `patch`. Por ejemplo:
 
 ```text
-sergiocosu/inventory-service:1.0.0
-sergiocosu/inventory-service:latest
+v1.0.12 → v1.0.13
 ```
 
-### Beneficio
+Por cada entrega se publican dos etiquetas de imagen:
 
-Garantiza versiones estables y trazables para despliegues productivos.
+```text
+<usuario-dockerhub>/inventory-service:1.0.13
+<usuario-dockerhub>/inventory-service:latest
+```
+
+La etiqueta versionada proporciona trazabilidad e inmutabilidad de la entrega. La etiqueta `latest` facilita identificar la versión estable más reciente, aunque los despliegues controlados deberían utilizar preferiblemente una versión específica.
 
 ---
 
-# ArgoCD
+## 12. Generación y finalidad de las imágenes Docker
 
-## Instalación
+Como resultado de los pipelines se generan imágenes Docker que empaquetan la aplicación, su runtime y las dependencias necesarias para su ejecución. Esto permite conservar un artefacto consistente y trazable durante las siguientes etapas del proceso de entrega.
 
-Crear namespace:
+Las imágenes se construyen para las siguientes plataformas:
 
-```bash
-kubectl create namespace argocd
+```text
+linux/amd64
+linux/arm64
 ```
 
-Instalar:
+Las imágenes tienen las siguientes finalidades:
 
-```bash
-kubectl apply -n argocd \
--f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-```
+- Representar una versión ejecutable de la aplicación después de superar la compilación y las pruebas.
+- Mantener trazabilidad entre el commit, la versión publicada y el artefacto generado.
+- Publicar versiones preliminares de desarrollo identificadas mediante el SHA del commit.
+- Publicar versiones estables con una etiqueta semántica y con la etiqueta `latest`.
+- Servir como artefacto de entrada para el despliegue posterior de la aplicación en Kubernetes.
 
-Validar:
-
-```bash
-kubectl get pods -n argocd
-```
+Las imágenes se almacenan en Docker Hub para que puedan ser descargadas y utilizadas durante las fases posteriores del proyecto.
 
 ---
 
-## Acceso
+## 13. Configuración de secretos
 
-```bash
-kubectl port-forward svc/argocd-server \
--n argocd 8081:443
-```
+Los pipelines utilizan secretos configurados en **Settings > Secrets and variables > Actions** dentro de GitHub:
 
-URL:
+| Secreto | Propósito |
+|---|---|
+| `DOCKERHUB_USERNAME` | Nombre del usuario propietario de la imagen en Docker Hub |
+| `DOCKERHUB_TOKEN` | Token utilizado para autenticar la publicación en Docker Hub |
+| `GITHUB_TOKEN` | Token generado automáticamente por GitHub para crear tags y releases |
 
-```text
-https://localhost:8081
-```
-
-Usuario:
-
-```text
-admin
-```
-
-Contraseña:
-
-```bash
-kubectl -n argocd get secret argocd-initial-admin-secret \
--o jsonpath="{.data.password}" | base64 -d
-```
+Las credenciales no se almacenan directamente en los archivos YAML ni en el código fuente.
 
 ---
 
-# Configuración GitOps
+## 14. Ejecución local
 
-Repositorio:
+### 14.1 Requisitos
 
-```text
-https://github.com/sergioandresco/Final-Project-Software-Architecture
-```
+- .NET SDK 8.
+- Docker.
+- Git.
 
-Archivo:
-
-```text
-application.yaml
-```
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-
-metadata:
-  name: inventory
-  namespace: argocd
-
-spec:
-  project: default
-
-  source:
-    repoURL: https://github.com/sergioandresco/Final-Project-Software-Architecture.git
-    targetRevision: main
-    path: inventory-chart
-
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: default
-
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-```
-
-Aplicar:
+### 14.2 Restaurar dependencias
 
 ```bash
-kubectl apply -f application.yaml
+dotnet restore Microservicios_y_Docker/InventoryService.sln
 ```
 
----
+### 14.3 Compilar la solución
 
-# Flujo Completo CI/CD + GitOps
+```bash
+dotnet build Microservicios_y_Docker/InventoryService.sln \
+  --configuration Release \
+  --no-restore
+```
+
+### 14.4 Ejecutar pruebas
+
+```bash
+dotnet test Microservicios_y_Docker/InventoryService.sln \
+  --configuration Release \
+  --no-build
+```
+
+### 14.5 Construir la imagen Docker
+
+Desde la raíz del repositorio:
+
+```bash
+docker build \
+  -t inventory-service:local \
+  -f Microservicios_y_Docker/Dockerfile \
+  Microservicios_y_Docker
+```
+
+### 14.6 Ejecutar el contenedor
+
+```bash
+docker run --rm -p 8080:8080 inventory-service:local
+```
+
+La documentación Swagger estará disponible en:
 
 ```text
-Developer
-    │
-    ▼
-development
-    │
-    ▼
-CI Development
-    │
-    ├── Restore
-    ├── Build
-    ├── Test
-    ├── Docker Build
-    ├── Docker Push (dev)
-    └── GitHub Pre-Release
-    │
-    ▼
-Pull Request
-    │
-    ▼
-main
-    │
-    ▼
-CI Production
-    │
-    ├── Restore
-    ├── Build
-    ├── Test
-    ├── Versioning
-    ├── Docker Build
-    ├── Docker Push
-    └── GitHub Release
-    │
-    ▼
-Docker Hub
-    │
-    ▼
-Git Repository
-    │
-    ▼
-ArgoCD
-    │
-    ▼
-Helm
-    │
-    ▼
-Kubernetes (k3d)
-    │
-    ▼
-Inventory Service
+http://localhost:8080/swagger
 ```
 
 ---
 
-# Validaciones
+## 15. Evidencias de ejecución
 
-Verificar Kubernetes:
+Esta sección reúne las evidencias solicitadas para demostrar la ejecución de los dos pipelines mediante pull requests.
 
-```bash
-kubectl get pods
-kubectl get svc
-```
+### 15.1 Ejecución del pipeline CI mediante pull request
 
-Verificar Helm:
+> Ejecución exitosa de `CI - Development` originada por un pull request hacia `development`.
 
-```bash
-helm list
-```
+<img width="1280" height="568" alt="image" src="https://github.com/user-attachments/assets/3af3b7e4-1766-4456-886e-309fd271091b" />
+<img width="1280" height="581" alt="image" src="https://github.com/user-attachments/assets/87223826-349b-46b1-8eb4-b6e5b053546b" />
+<img width="1210" height="584" alt="image" src="https://github.com/user-attachments/assets/0c33f1e4-6d98-4bbd-ab5b-ce116a0b6428" />
 
-Verificar ArgoCD:
+<br><br><br>
 
-```bash
-kubectl get applications -n argocd
-```
+### 15.2 Ejecución del pipeline CD mediante pull request
 
-Resultado esperado:
+> Ejecución exitosa de `CD - Main` originada por un pull request hacia `main`.
 
-```text
-inventory
-Healthy
-Synced
-```
+<img width="1280" height="713" alt="image" src="https://github.com/user-attachments/assets/6810e210-7503-4625-9a87-c9b967860b62" />
+<img width="1280" height="585" alt="image" src="https://github.com/user-attachments/assets/2bbf096e-1c3a-4a95-af25-aa280890da0e" />
+<img width="1210" height="584" alt="image" src="https://github.com/user-attachments/assets/6da1e895-bcb0-4506-812b-2d24aaee831e" />
+
+<br><br><br>
 
 ---
 
-# Conclusión
+## 16. Resultados
 
-Se implementó exitosamente una arquitectura moderna basada en microservicios utilizando .NET 8, Docker, Kubernetes, Helm, GitHub Actions y ArgoCD.
+La implementación permite que cada cambio integrado en `development` sea compilado y probado automáticamente antes de generar una imagen preliminar. De manera complementaria, los pull requests y cambios dirigidos a `main` activan el pipeline de entrega, que vuelve a validar la solución y prepara una versión estable.
 
-La solución permite automatizar el ciclo completo de desarrollo y despliegue mediante Integración Continua y GitOps, garantizando trazabilidad, reproducibilidad, versionamiento automatizado y facilidad de administración de los entornos.
+Los artefactos quedan identificados mediante el SHA del commit en desarrollo y mediante versionamiento semántico en las entregas estables. Esto proporciona trazabilidad entre el código fuente, la ejecución del pipeline, la imagen Docker y el release generado.
+
+---
+
+## 17. Conclusiones
+
+GitHub Actions permitió implementar los procesos de integración y entrega continua dentro del mismo repositorio del proyecto. La automatización reduce las verificaciones manuales, detecta errores antes de preparar una entrega y asegura que la imagen publicada provenga de código compilado y probado.
+
+La separación entre `development` y `main` diferencia las validaciones preliminares de las entregas estables. Por su parte, Docker proporciona un artefacto portable que servirá como entrada para la futura implementación en Kubernetes, junto con los controles de seguridad y monitoreo contemplados en las siguientes fases del proyecto.
