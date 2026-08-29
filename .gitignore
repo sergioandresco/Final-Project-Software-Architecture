@@ -1,2 +1,11 @@
 ## macOS
 .DS_Store
+
+## Resultados de pruebas / cobertura (dotnet test, SonarScanner)
+TestResults/
+.sonarqube/
+*.sarif
+
+## Jenkins (datos locales del contenedor, si se ejecuta sin Docker volume nombrado)
+Jenkins/*.env
+Jenkins/k3d-kubeconfig.yaml

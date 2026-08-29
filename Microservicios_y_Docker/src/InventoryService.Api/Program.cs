@@ -45,6 +45,9 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Métricas HTTP (duración, código de estado, en vuelo) para scraping de Prometheus.
+app.UseHttpMetrics();
+
 app.MapControllers();
 
 // Endpoints de salud para sondas de Kubernetes (liveness / readiness)
@@ -56,5 +59,8 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("ready")
 });
+
+// Endpoint /metrics en formato Prometheus (scrapeado por el ServiceMonitor del chart).
+app.MapMetrics();
 
 app.Run();

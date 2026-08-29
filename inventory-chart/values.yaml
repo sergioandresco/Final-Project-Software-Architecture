@@ -17,3 +17,8 @@ service:
 health:
   livenessPath: /health/live
   readinessPath: /health/ready
+
+monitoring:
+  enabled: false
+  metricsPath: /metrics
+  prometheusReleaseLabel: monitoring
