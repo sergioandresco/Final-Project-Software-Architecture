@@ -3,6 +3,7 @@ using InventoryService.Application;
 using InventoryService.Infrastructure;
 using InventoryService.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
