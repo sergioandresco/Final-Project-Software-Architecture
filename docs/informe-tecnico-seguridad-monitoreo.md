@@ -94,11 +94,25 @@ El chart de la aplicación (`inventory-chart`) expone opcionalmente un `ServiceM
 > **Pendiente de completar** con capturas reales tras ejecutar el pipeline.
 
 - [ ] Captura del análisis de SonarCloud (Quality Gate, code smells, cobertura).
-- [ ] Resumen de hallazgos y recomendaciones de mejora:
 
-| Hallazgo | Severidad | Recomendación |
-|---|---|---|
-| _(completar)_ | | |
+El primer análisis (`Security Rating: E`, 21 issues de tipo Vulnerability, 0 code smells/bugs
+en el código C# de la aplicación) reportó únicamente hallazgos de *hardening* de
+infraestructura y pipelines, agrupados así:
+
+| Hallazgo | Severidad | Archivo(s) | Recomendación aplicada |
+|---|---|---|---|
+| Secreto interpolado directamente en un bloque `run:` de GitHub Actions (`S7636`) | Major | `ci.yml` | Referenciar la variable de entorno (`$SONAR_TOKEN`) ya expuesta vía `env:`, en vez de interpolar `${{ secrets.SONAR_TOKEN }}` dentro del script |
+| Instalación de Helm vía `curl \| bash` sin verificación (`S8482`) | **Blocker** | `Jenkins/Dockerfile` | Reemplazar por descarga del binario oficial + verificación de checksum SHA-256 antes de ejecutar |
+| Llamadas `curl` sin forzar HTTPS/TLS explícitamente (`S6506`) | Major | `Jenkins/Dockerfile` | Agregar `--proto '=https' --tlsv1.2` a cada `curl` |
+| Sin límite de memoria en el contenedor (`S6864`) | Major | `inventory-chart/templates/deployment.yaml`, `Kubernetes/inventory-deployment.yaml` | Definir `resources.requests`/`limits` |
+| Token de service account montado sin uso (`S6865`) | Major | mismos dos archivos | `automountServiceAccountToken: false` (la app no llama a la API de Kubernetes) |
+| Acciones de terceros referenciadas por tag mutable en vez de SHA (`S7637`) | Major (x10) | `ci-development.yml`, `cd-main.yml` | Fijar cada `uses:` a su commit SHA completo, con comentario `# vX` para legibilidad |
+
+Los seis hallazgos fueron corregidos y verificados localmente antes de subir el fix:
+el `Jenkinsfile`/`Dockerfile` de Jenkins se reconstruyó con éxito (checksums de
+`kubectl` y `helm` verificados: `OK`), y el chart de Helm se volvió a desplegar sin
+errores (`helm template` + `helm upgrade --install` contra el clúster k3d). Pendiente
+re-ejecutar el análisis de SonarCloud tras el push para confirmar la mejora del rating.
 
 ## 7. Evidencia de monitoreo
 

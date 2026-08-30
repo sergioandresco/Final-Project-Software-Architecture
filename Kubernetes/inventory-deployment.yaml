@@ -12,11 +12,18 @@ spec:
       labels:
         app: inventory-service
     spec:
+      automountServiceAccountToken: false
       containers:
       - name: inventory-service
         image: sergiocosu/inventory-service:1.0.0
         ports:
         - containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 256Mi
         livenessProbe:
           httpGet:
             path: /health/live

@@ -51,6 +51,8 @@ El alcance de esta fase termina con:
 
 El despliegue automático en Kubernetes, la integración de controles de seguridad y la habilitación de monitoreo corresponden a fases posteriores del proyecto.
 
+> Esa fase posterior ya está documentada en [`docs/informe-tecnico-seguridad-monitoreo.md`](docs/informe-tecnico-seguridad-monitoreo.md) (Actividad 4): Jenkins como segundo pipeline de CD, análisis estático con SonarCloud, y monitoreo con Prometheus + Grafana sobre el clúster k3d. Las guías paso a paso para levantar cada herramienta están en [`Jenkins/README.md`](Jenkins/README.md) y [`Monitoring/README.md`](Monitoring/README.md).
+
 ---
 
 ## 4. Descripción de la aplicación
