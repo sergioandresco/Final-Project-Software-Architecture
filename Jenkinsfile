@@ -3,12 +3,12 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
-        KUBECONFIG             = credentials('k3d-kubeconfig')
+        KUBECONFIG            = credentials('k3d-kubeconfig')
 
-        IMAGE_NAME     = 'sergiocosu/inventory-service'
-        IMAGE_TAG      = "${env.BUILD_NUMBER}"
-        SOLUTION_PATH  = 'Microservicios_y_Docker/InventoryService.sln'
-        DOCKER_CONTEXT = 'Microservicios_y_Docker'
+        IMAGE_NAME            = 'sergiocosu/inventory-service'
+        IMAGE_TAG             = "${env.BUILD_NUMBER}"
+        SOLUTION_PATH         = 'Microservicios_y_Docker/InventoryService.sln'
+        DOCKER_BUILD_CONTEXT  = 'Microservicios_y_Docker'
     }
 
     options {
@@ -40,7 +40,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ${DOCKER_CONTEXT}"
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ${DOCKER_BUILD_CONTEXT}"
             }
         }
 
