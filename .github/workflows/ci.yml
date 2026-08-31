@@ -49,8 +49,9 @@ jobs:
             /o:"sergioandresco" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml"
-
+            /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" \
+            /d:sonar.qualitygate.wait=true \
+            
       - name: Build
         run: dotnet build Microservicios_y_Docker/InventoryService.sln --no-restore --configuration Release
 

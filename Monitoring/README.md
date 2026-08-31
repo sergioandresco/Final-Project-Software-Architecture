@@ -2,8 +2,7 @@
 
 Se usa el chart comunitario **kube-prometheus-stack**, que despliega Prometheus,
 Grafana, Alertmanager, kube-state-metrics y node-exporter en un solo paso dentro
-del clúster k3d. No requiere crear ninguna cuenta externa: Grafana se administra
-con un usuario/contraseña locales al clúster.
+del clúster k3d.
 
 ## 1. Instalar el stack
 
@@ -59,25 +58,3 @@ Abre <http://localhost:3000>.
     -o jsonpath="{.data.admin-password}" | base64 -d
   ```
 
-## 4. Importar el dashboard
-
-**Dashboards → New → Import**, sube [`inventory-service-dashboard.json`](./inventory-service-dashboard.json)
-y selecciona tu datasource de Prometheus (`Prometheus`, ya viene preconfigurado
-por el chart). Incluye:
-
-- Pods listos / reinicios de contenedores.
-- CPU y memoria por pod (vía cAdvisor/kube-state-metrics).
-- Tasa de requests, latencia p95 y errores 5xx del API `/api/products` (métricas
-  propias de la app, vía `prometheus-net`).
-
-## 5. Alerta básica en Grafana
-
-Grafana → **Alerting → Alert rules → New alert rule**:
-
-1. **Query:** `sum(kube_pod_status_ready{condition="true", pod=~"inventory-service.*"})`
-2. **Condition:** `IS BELOW 1` durante `2m` (dispara si no hay ningún pod listo).
-3. **Folder/labels:** crea una carpeta `inventory-service`.
-4. **Contact point:** para el laboratorio basta con el contact point `grafana-default-email`
-   preconfigurado, o crea uno nuevo (Slack/webhook) en **Alerting → Contact points**.
-
-Con eso ya tienes una alerta funcional de "servicio caído" para incluir en el informe.

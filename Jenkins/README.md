@@ -64,11 +64,3 @@ variable de entorno `KUBECONFIG` en la etapa de despliegue.
 
 **Build Now** en el job. Las etapas: `Checkout → Build & Test (.NET) → Docker Build →
 Docker Push → Deploy to k3d`.
-
-## Notas
-
-- El contenedor de Jenkins usa el Docker del host (socket montado), no un daemon propio:
-  las imágenes que construye quedan disponibles directamente en `docker images` del host.
-- Este setup (Jenkins como root, socket de Docker montado) es apropiado para un entorno
-  de laboratorio/académico. En producción se recomienda un agente Docker dedicado sin
-  privilegios de root y sin acceso directo al socket del host.
