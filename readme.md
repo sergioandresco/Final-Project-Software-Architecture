@@ -12,6 +12,7 @@
 |---|---|---|
 | Actividad 3 | Implementación inicial de pipelines CI/CD con GitHub Actions | [`docs/README-actividad-3.md`](docs/README-actividad-3.md) |
 | Actividad 4 | Pipeline con Jenkins, seguridad con SonarCloud y monitoreo con Prometheus y Grafana | [`docs/informe-tecnico-seguridad-monitoreo.md`](docs/informe-tecnico-seguridad-monitoreo.md) |
+| Laboratorio OpenTelemetry | Pipeline OTel end-to-end (trazas, métricas, logs) con Jaeger y Prometheus en GCP y AWS | [`OpenTelemetry/README.md`](OpenTelemetry/README.md) |
 
 ---
 

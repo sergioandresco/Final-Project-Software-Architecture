@@ -9,3 +9,12 @@ TestResults/
 ## Jenkins (datos locales del contenedor, si se ejecuta sin Docker volume nombrado)
 Jenkins/*.env
 Jenkins/k3d-kubeconfig.yaml
+
+## Laboratorio OpenTelemetry
+OpenTelemetry/**/*.db
+OpenTelemetry/**/__pycache__/
+OpenTelemetry/**/.venv/
+OpenTelemetry/deploy/**/.terraform/
+OpenTelemetry/deploy/**/terraform.tfstate*
+OpenTelemetry/deploy/**/terraform.tfvars
+OpenTelemetry/benchmark/results/**/*-warmup-k6-summary.json
