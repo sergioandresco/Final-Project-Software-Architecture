@@ -1,0 +1,4 @@
+region       = "us-east-1"
+aws_profile  = "default"            # usa una cuenta personal / académica
+allowed_cidr = "203.0.113.10/32"    # tu IP pública: curl -s https://checkip.amazonaws.com
+image_tag    = "v1"

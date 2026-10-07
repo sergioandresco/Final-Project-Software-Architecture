@@ -1,0 +1,20 @@
+{{- if .Values.serviceMonitor.enabled }}
+# kube-prometheus-stack descubre este ServiceMonitor por el label `release`.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-collector
+  labels:
+    app: otel-collector
+    release: {{ .Values.serviceMonitor.prometheusReleaseLabel }}
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector
+  endpoints:
+    - port: metrics-app     # métricas de service-a / service-b
+      honorLabels: true
+      interval: 15s
+    - port: metrics-self    # métricas internas otelcol_*
+      interval: 15s
+{{- end }}

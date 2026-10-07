@@ -1,0 +1,11 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: /scripts/load-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 30 max VUs, 15m10s max duration (incl. graceful stop):
+              * steady_load: 30 looping VUs for 15m0s (gracefulStop: 10s)
+[gke-evidencias] p99=120.3ms p95=73.8ms rps=61.4 errores=0.63%

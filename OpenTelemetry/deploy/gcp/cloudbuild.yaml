@@ -1,0 +1,12 @@
+# Construye y publica las imágenes en Artifact Registry sin necesitar Docker local:
+#   gcloud builds submit ../../services --config cloudbuild.yaml --substitutions=_REGISTRY=<registry_url>,_TAG=v1
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "--build-arg", "SERVICE=service-a", "-t", "${_REGISTRY}/service-a:${_TAG}", "."]
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "--build-arg", "SERVICE=service-b", "-t", "${_REGISTRY}/service-b:${_TAG}", "."]
+images:
+  - "${_REGISTRY}/service-a:${_TAG}"
+  - "${_REGISTRY}/service-b:${_TAG}"
+substitutions:
+  _TAG: latest

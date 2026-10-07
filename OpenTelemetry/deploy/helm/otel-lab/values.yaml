@@ -1,0 +1,70 @@
+# Registro de imágenes (Artifact Registry en GCP). deploy.sh lo sobreescribe.
+imageRegistry: us-central1-docker.pkg.dev/PROJECT_ID/otel-lab
+imageTag: latest
+
+environment: gcp-gke
+
+services:
+  service-a:
+    replicas: 2
+    env:
+      SERVICE_B_URL: http://service-b:8000
+  service-b:
+    replicas: 2
+    env:
+      CHAOS_FAILURE_RATE: "0.01"
+      CHAOS_LATENCY_MS: "0"
+
+serviceA:
+  # Expone service-a con un LoadBalancer público para lanzar la carga k6 desde fuera.
+  serviceType: LoadBalancer
+
+serviceResources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+otel:
+  # true = modo baseline (sin instrumentación) para el benchmark en la nube.
+  sdkDisabled: false
+  exporterEndpoint: http://otel-collector:4317
+
+postgres:
+  image: postgres:17.11
+  user: otel
+  password: otel
+  database: otel_lab
+
+collector:
+  image: otel/opentelemetry-collector-contrib:0.162.0
+  replicas: 1
+  # Contenido completo del config del Collector. Se pasa con:
+  #   --set-file collector.config=../../collector/otel-collector-gcp.yaml
+  config: ""
+  gcpProjectId: ""
+  # GSA con roles/logging.logWriter y roles/cloudtrace.agent (Workload Identity, creado por Terraform).
+  gcpServiceAccount: ""
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+jaeger:
+  # 2.20.0: la 2.21 eliminó la API HTTP v1 (/api/services) que usa el datasource Jaeger de Grafana.
+  image: jaegertracing/jaeger:2.20.0
+  maxTraces: 20000
+
+loki:
+  enabled: true
+  image: grafana/loki:3.7.8
+
+serviceMonitor:
+  enabled: true
+  # Debe coincidir con el release de kube-prometheus-stack (ver Monitoring/README.md).
+  prometheusReleaseLabel: monitoring

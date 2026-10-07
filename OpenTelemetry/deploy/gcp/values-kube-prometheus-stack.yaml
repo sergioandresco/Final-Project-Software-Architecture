@@ -1,0 +1,51 @@
+# kube-prometheus-stack para el laboratorio OTel en GKE.
+#   helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+#     -n monitoring --create-namespace -f values-kube-prometheus-stack.yaml
+prometheus:
+  prometheusSpec:
+    retention: 3d
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 2Gi
+
+alertmanager:
+  enabled: false
+
+grafana:
+  adminPassword: "ChangeMe123!"
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL
+  additionalDataSources:
+    - name: Jaeger
+      uid: jaeger
+      type: jaeger
+      access: proxy
+      url: http://jaeger-query.otel-lab.svc.cluster.local:16686
+      jsonData:
+        tracesToLogsV2:
+          datasourceUid: loki
+          spanStartTimeShift: "-5m"
+          spanEndTimeShift: "5m"
+          customQuery: true
+          query: '{service_namespace="otel-lab"} | trace_id="$${__trace.traceId}"'
+        nodeGraph:
+          enabled: true
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki.otel-lab.svc.cluster.local:3100
+      jsonData:
+        derivedFields:
+          - name: TraceID
+            matcherType: label
+            matcherRegex: trace_id
+            datasourceUid: jaeger
+            url: "$${__value.raw}"
+            urlDisplayLabel: Ver traza en Jaeger

@@ -1,0 +1,112 @@
+# OTel Collector — AWS (ECS Fargate). Terraform inyecta este archivo en la variable
+# de entorno OTEL_COLLECTOR_CONFIG y el contenedor arranca con --config=env:OTEL_COLLECTOR_CONFIG.
+#
+#   Trazas   -> AWS X-Ray
+#   Métricas -> Amazon Managed Service for Prometheus (remote write, SigV4)
+#               + endpoint Prometheus :8889 dentro de la VPC
+#   Logs     -> CloudWatch Logs (grupo /otel-lab/otlp-logs)
+#
+# Credenciales: IAM task role del servicio (xray:PutTraceSegments, logs:PutLogEvents, aps:RemoteWrite).
+# Variables requeridas: AWS_REGION, AMP_REMOTE_WRITE_URL.
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  sigv4auth:
+    region: ${env:AWS_REGION}
+    service: aps
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  # Auto-scrape de las métricas internas del Collector para enviarlas también a AMP.
+  prometheus/self:
+    config:
+      scrape_configs:
+        - job_name: otel-collector
+          scrape_interval: 15s
+          static_configs:
+            - targets: ["127.0.0.1:8888"]
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 80
+    spike_limit_percentage: 20
+
+  # Detecta cloud.provider=aws, aws.ecs.task.arn, aws.ecs.cluster.arn, etc.
+  resource_detection:
+    detectors: [env, ecs]
+    timeout: 5s
+    override: false
+
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: aws-ecs
+        action: upsert
+      - key: collector.pipeline
+        value: otel-lab-aws
+        action: insert
+
+  batch:
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+    timeout: 2s
+
+exporters:
+  awsxray:
+    region: ${env:AWS_REGION}
+    index_all_attributes: true
+
+  prometheus_remote_write/amp:
+    endpoint: ${env:AMP_REMOTE_WRITE_URL}
+    auth:
+      authenticator: sigv4auth
+    resource_to_telemetry_conversion:
+      enabled: true
+
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    # Convierte los atributos de Resource (service.name, ...) en labels de Prometheus.
+    # Deprecado en favor de resource_constant_labels, pero en 0.162.0 esa opción no
+    # agrega los labels (probado): se mantiene esta hasta que se corrija.
+    resource_to_telemetry_conversion:
+      enabled: true
+    metric_expiration: 10m
+
+  awscloudwatchlogs:
+    region: ${env:AWS_REGION}
+    log_group_name: /otel-lab/otlp-logs
+    log_stream_name: otel-collector
+
+service:
+  extensions: [health_check, sigv4auth]
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      level: detailed
+      readers:
+        - pull:
+            exporter:
+              prometheus:
+                host: 0.0.0.0
+                port: 8888
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource_detection, resource, batch]
+      exporters: [awsxray]
+    metrics:
+      receivers: [otlp, prometheus/self]
+      processors: [memory_limiter, resource_detection, resource, batch]
+      exporters: [prometheus_remote_write/amp, prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource_detection, resource, batch]
+      exporters: [awscloudwatchlogs]

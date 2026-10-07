@@ -1,0 +1,56 @@
+# Datasources con correlación cross-signal usando trace_id como pivot:
+#   Traza (span)                -> Loki   (logs del mismo trace_id)
+#   Traza (span)                -> Prometheus (latencia del servicio)
+#   Log (structured metadata)   -> Jaeger (link "Ver traza")
+# Nota: "$$" escapa "$" para que Grafana no lo interprete como variable de entorno.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      httpMethod: POST
+
+  - name: Jaeger
+    uid: jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        customQuery: true
+        query: '{service_namespace="otel-lab"} | trace_id="$${__trace.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        tags:
+          - key: service.name
+            value: service_name
+        queries:
+          - name: Latencia p99 del servicio
+            query: 'histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{$$__tags}[1m])))'
+      nodeGraph:
+        enabled: true
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - name: TraceID
+          matcherType: label
+          matcherRegex: trace_id
+          datasourceUid: jaeger
+          url: "$${__value.raw}"
+          urlDisplayLabel: Ver traza en Jaeger

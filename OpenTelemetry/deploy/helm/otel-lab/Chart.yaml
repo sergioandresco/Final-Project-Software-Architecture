@@ -1,0 +1,6 @@
+apiVersion: v2
+name: otel-lab
+description: service-a -> service-b instrumentados con OpenTelemetry + OTel Collector, Jaeger y Loki
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

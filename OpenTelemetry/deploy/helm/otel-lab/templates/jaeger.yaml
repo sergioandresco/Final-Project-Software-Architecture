@@ -1,0 +1,51 @@
+# Jaeger v2 all-in-one (almacenamiento en memoria) para el laboratorio.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  labels:
+    app: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+        - name: jaeger
+          image: {{ .Values.jaeger.image }}
+          # Limita las trazas en memoria: sin esto Jaeger guarda hasta 100k y termina OOMKilled bajo carga.
+          args: ["--set=extensions.jaeger_storage.backends.some_storage.memory.max_traces={{ .Values.jaeger.maxTraces }}"]
+          ports:
+            - { name: otlp-grpc, containerPort: 4317 }
+            - { name: ui, containerPort: 16686 }
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-collector
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - { name: otlp-grpc, port: 4317, targetPort: otlp-grpc }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-query
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - { name: ui, port: 16686, targetPort: ui }

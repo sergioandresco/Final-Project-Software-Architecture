@@ -1,0 +1,85 @@
+{{- range $name, $svc := .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+    app.kubernetes.io/part-of: otel-lab
+spec:
+  replicas: {{ $svc.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+        app.kubernetes.io/part-of: otel-lab
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: "{{ $.Values.imageRegistry }}/{{ $name }}:{{ $.Values.imageTag }}"
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: {{ $name }}
+            - name: OTEL_SDK_DISABLED
+              value: {{ $.Values.otel.sdkDisabled | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ $.Values.otel.exporterEndpoint }}
+            - name: OTEL_EXPORTER_OTLP_INSECURE
+              value: "true"
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage
+            - name: OTEL_SEMCONV_STABILITY_OPT_IN
+              value: http
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "deployment.environment={{ $.Values.environment }},k8s.pod.name=$(K8S_POD_NAME),k8s.namespace.name=$(K8S_NAMESPACE),service.instance.id=$(K8S_POD_NAME)"
+            - name: DATABASE_URL
+              value: "postgresql+psycopg://{{ $.Values.postgres.user }}:{{ $.Values.postgres.password }}@postgres:5432/{{ $.Values.postgres.database }}"
+            {{- range $k, $v := $svc.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            {{- toYaml $.Values.serviceResources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+spec:
+  type: {{ if eq $name "service-a" }}{{ $.Values.serviceA.serviceType }}{{ else }}ClusterIP{{ end }}
+  selector:
+    app: {{ $name }}
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+{{- end }}

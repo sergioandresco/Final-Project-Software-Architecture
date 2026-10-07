@@ -1,0 +1,163 @@
+# Stack local del laboratorio OpenTelemetry.
+#
+#   docker compose up -d --build          # stack instrumentado completo
+#   docker compose --profile loadtest run --rm k6          # carga con k6
+#
+# UIs:
+#   service-a (API)  http://localhost:8000/docs
+#   Jaeger UI        http://localhost:16686
+#   Prometheus       http://localhost:9090
+#   Grafana          http://localhost:3000   (admin / admin)
+#   Collector zpages http://localhost:55679/debug/tracez
+
+x-otel-env: &otel-env
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+  OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+  OTEL_EXPORTER_OTLP_INSECURE: "true"
+  OTEL_PROPAGATORS: tracecontext,baggage
+  # Muestreo head-based: 100% por defecto; el benchmark también prueba 10% (traceidratio 0.1).
+  OTEL_TRACES_SAMPLER: ${OTEL_TRACES_SAMPLER:-parentbased_always_on}
+  OTEL_TRACES_SAMPLER_ARG: ${OTEL_TRACES_SAMPLER_ARG:-1.0}
+  OTEL_SEMCONV_STABILITY_OPT_IN: http
+  OTEL_METRIC_EXPORT_INTERVAL: "10000"
+  OTEL_SDK_DISABLED: ${OTEL_SDK_DISABLED:-false}
+  # "none" desactiva una señal (análisis de overhead por componente).
+  OTEL_TRACES_EXPORTER: ${OTEL_TRACES_EXPORTER:-otlp}
+  OTEL_METRICS_EXPORTER: ${OTEL_METRICS_EXPORTER:-otlp}
+  OTEL_LOGS_EXPORTER: ${OTEL_LOGS_EXPORTER:-otlp}
+
+x-service-resources: &service-resources
+  # Límites fijos para que el benchmark con / sin OTel sea comparable.
+  cpus: "1.0"
+  mem_limit: 512m
+
+services:
+  postgres:
+    image: postgres:17.11
+    environment:
+      POSTGRES_USER: otel
+      POSTGRES_PASSWORD: otel
+      POSTGRES_DB: otel_lab
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U otel -d otel_lab"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    command: ["postgres", "-c", "max_connections=200"]
+
+  service-b:
+    build:
+      context: ./services
+      args:
+        SERVICE: service-b
+    image: otel-lab/service-b:latest
+    <<: *service-resources
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: service-b
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=local
+      DATABASE_URL: postgresql+psycopg://otel:otel@postgres:5432/otel_lab
+      CHAOS_FAILURE_RATE: ${CHAOS_FAILURE_RATE:-0.01}
+      CHAOS_LATENCY_MS: ${CHAOS_LATENCY_MS:-0}
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  service-a:
+    build:
+      context: ./services
+      args:
+        SERVICE: service-a
+    image: otel-lab/service-a:latest
+    <<: *service-resources
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: service-a
+      OTEL_RESOURCE_ATTRIBUTES: deployment.environment=local
+      DATABASE_URL: postgresql+psycopg://otel:otel@postgres:5432/otel_lab
+      SERVICE_B_URL: http://service-b:8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-b:
+        condition: service_started
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.162.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./collector/otel-collector-local.yaml:/etc/otelcol/config.yaml:ro
+    mem_limit: 512m
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # métricas internas del Collector
+      - "8889:8889"   # métricas de la app (formato Prometheus)
+      - "13133:13133" # health_check
+      - "55679:55679" # zpages
+    depends_on:
+      - jaeger
+      - loki
+
+  jaeger:
+    # 2.20.0: la 2.21 eliminó la API HTTP v1 (/api/services) que usa el datasource Jaeger de Grafana.
+    image: jaegertracing/jaeger:2.20.0
+    command: ["--set=extensions.jaeger_storage.backends.some_storage.memory.max_traces=20000"]
+    ports:
+      - "16686:16686" # Jaeger UI
+
+  prometheus:
+    image: prom/prometheus:v3.13.4
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-lifecycle
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  loki:
+    image: grafana/loki:3.7.8
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes:
+      - ./observability/loki/loki-config.yaml:/etc/loki/config.yaml:ro
+    ports:
+      - "3100:3100"
+
+  grafana:
+    image: grafana/grafana:13.0.10
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      # Editor: permite usar Explore (correlación logs ↔ trazas) sin iniciar sesión. Solo para el lab local.
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/otel-lab-dashboard.json
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - jaeger
+      - loki
+
+  k6:
+    image: grafana/k6:2.3.0
+    profiles: ["loadtest"]
+    working_dir: /scripts
+    command: ["run", "/scripts/load-test.js"]
+    environment:
+      BASE_URL: http://service-a:8000
+      VUS: ${VUS:-100}
+      DURATION: ${DURATION:-5m}
+      RATE: ${RATE:-0}
+      RUN_LABEL: ${RUN_LABEL:-manual}
+    volumes:
+      - ./benchmark/k6:/scripts:ro
+      - ./benchmark/results:/results
