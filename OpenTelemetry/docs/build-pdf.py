@@ -6,8 +6,13 @@ Mermaid se renderiza igual que en GitHub). Usa las fuentes Aptos/Arial que trae 
 si están instaladas; si no, cae en Helvetica.
 
     python3 docs/build-pdf.py
+
+Para otro documento con el mismo diseño (p. ej. el plan de Game Day) se usan variables de entorno:
+
+    DOC_SRC=../GameDay/docs/plan-game-day.md DOC_TITULO="..." DOC_ENTREGABLE="..." python3 docs/build-pdf.py
 """
 
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -15,9 +20,9 @@ from pathlib import Path
 import markdown
 
 DOCS = Path(__file__).resolve().parent
-SRC = DOCS / "reporte-tecnico.md"
-HTML = DOCS / "reporte-tecnico.html"
-PDF = DOCS / "reporte-tecnico.pdf"
+SRC = Path(os.environ.get("DOC_SRC", DOCS / "reporte-tecnico.md")).resolve()
+HTML = SRC.with_suffix(".html")  # junto al .md, para que las rutas relativas de las imágenes funcionen
+PDF = SRC.with_suffix(".pdf")
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 OFFICE_FONTS = Path("/Applications/Microsoft Outlook.app/Contents/Resources/DFonts")
 
@@ -25,9 +30,9 @@ OFFICE_FONTS = Path("/Applications/Microsoft Outlook.app/Contents/Resources/DFon
 UNIVERSIDAD = "UNIVERSIDAD DE LA SABANA"
 FACULTAD = "Facultad de Ingeniería"
 MATERIA = "Observabilidad en ambientes productivos"
-TITULO = "Laboratorio: pipeline OpenTelemetry end-to-end con Jaeger y Prometheus en GCP y AWS"
-ENTREGABLE = "Reporte técnico del laboratorio"
-FECHA = "Octubre 2026"
+TITULO = os.environ.get("DOC_TITULO", "Laboratorio: pipeline OpenTelemetry end-to-end con Jaeger y Prometheus en GCP y AWS")
+ENTREGABLE = os.environ.get("DOC_ENTREGABLE", "Reporte técnico del laboratorio")
+FECHA = os.environ.get("DOC_FECHA", "Octubre 2026")
 ESTUDIANTES = [
     ("David Aníbal", "Vásquez"),
     ("Sergio Andrés", "Cobos"),

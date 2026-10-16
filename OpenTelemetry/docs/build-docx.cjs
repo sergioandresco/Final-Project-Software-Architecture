@@ -5,6 +5,9 @@
  *   npm install docx marked          # una sola vez, en cualquier carpeta incluida en NODE_PATH
  *   node docs/build-docx.cjs
  *
+ * Para otro documento con el mismo diseño (p. ej. el plan de Game Day):
+ *   DOC_SRC=../GameDay/docs/plan-game-day.md DOC_TITULO="..." DOC_ENTREGABLE="..." node docs/build-docx.cjs
+ *
  * La Figura 1 (arquitectura) usa docs/arquitectura.png, el diagrama Mermaid ya renderizado.
  */
 const fs = require("fs");
@@ -16,16 +19,17 @@ const {
 } = require("docx");
 
 const DOCS = __dirname;
-const SRC = path.join(DOCS, "reporte-tecnico.md");
-const OUT = path.join(DOCS, "reporte-tecnico.docx");
+const SRC = path.resolve(process.env.DOC_SRC || path.join(DOCS, "reporte-tecnico.md"));
+const SRC_DIR = path.dirname(SRC); // las rutas de imágenes del .md son relativas a su carpeta
+const OUT = SRC.replace(/\.md$/, ".docx");
 
 // --- Portada (mismos datos que build-pdf.py) ---------------------------------------------------
 const UNIVERSIDAD = "UNIVERSIDAD DE LA SABANA";
 const FACULTAD = "Facultad de Ingeniería";
 const MATERIA = "Observabilidad en ambientes productivos";
-const TITULO = "Laboratorio: pipeline OpenTelemetry end-to-end con Jaeger y Prometheus en GCP y AWS";
-const ENTREGABLE = "Reporte técnico del laboratorio";
-const FECHA = "Octubre 2026";
+const TITULO = process.env.DOC_TITULO || "Laboratorio: pipeline OpenTelemetry end-to-end con Jaeger y Prometheus en GCP y AWS";
+const ENTREGABLE = process.env.DOC_ENTREGABLE || "Reporte técnico del laboratorio";
+const FECHA = process.env.DOC_FECHA || "Octubre 2026";
 const ESTUDIANTES = [
   ["David Aníbal", "Vásquez"],
   ["Sergio Andrés", "Cobos"],
@@ -182,7 +186,9 @@ function codeBlock(text) {
 function figure(html) {
   const out = classedParagraphs(html.replace(/<p class="nota">.*?<\/p>/s, ""));
   const img = html.match(/<img src="([^"]+)"/);
-  if (img) out.push(imageParagraph(path.resolve(DOCS, img[1])));
+  // Respeta un `style="max-height: NNmm"` del <img> (1 mm ≈ 3.78 px) para igualar el tamaño del PDF.
+  const mh = html.match(/max-height:\s*(\d+)mm/);
+  if (img) out.push(imageParagraph(path.resolve(SRC_DIR, img[1]), 600, mh ? Math.round(Number(mh[1]) * 3.78) : 450));
   const pre = html.match(/<pre>([\s\S]*?)<\/pre>/);
   if (pre) out.push(...codeBlock(decode(pre[1])));
   const nota = html.match(/<p class="nota">(.*?)<\/p>/s);
@@ -290,7 +296,7 @@ function body() {
         out.push(apaTable(t), new Paragraph({ spacing: { after: 120 }, children: [] }));
         break;
       case "code":
-        if (t.lang === "mermaid") out.push(imageParagraph(path.join(DOCS, "arquitectura.png"), 560, 520));
+        if (t.lang === "mermaid") out.push(imageParagraph(path.join(SRC_DIR, "arquitectura.png"), 560, 520));
         else out.push(...codeBlock(t.text));
         break;
       case "html": {

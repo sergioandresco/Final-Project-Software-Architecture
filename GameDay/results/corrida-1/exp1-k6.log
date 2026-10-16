@@ -1,0 +1,13 @@
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+     execution: local
+        script: /scripts/load-test.js
+        output: -
+     scenarios: (100.00%) 1 scenario, 300 max VUs, 10m40s max duration (incl. graceful stop):
+              * steady_load: 50.00 iterations/s for 10m30s (maxVUs: 300, gracefulStop: 10s)
+time="2026-10-16T03:41:01Z" level=warning msg="Insufficient VUs, reached 300 active VUs and cannot initialize more" executor=constant-arrival-rate scenario=steady_load
+[exp1-k6] p99=6544.5ms p95=2895.7ms rps=54.9 errores=0.01%
+time="2026-10-16T03:41:25Z" level=error msg="test run was aborted because k6 received a 'interrupt' signal"

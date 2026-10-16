@@ -1,0 +1,56 @@
+[22:34:07] Preparación: service-b sin fallas inyectadas (CHAOS_FAILURE_RATE=0) para aislar el efecto de la latencia
+[22:34:11] Carga: k6 constant-arrival-rate 50 it/s
+[22:34:11] FASE baseline (120s): verificación del estado estable
+  baseline   rps=  52.8  err= 0.00%  p99= 0.055s  p99 POST= 0.065s  p99 GET(indep)= 0.010s  activas=1
+  baseline   rps=  67.2  err= 0.00%  p99= 0.052s  p99 POST= 0.063s  p99 GET(indep)= 0.023s  activas=0
+  baseline   rps=  67.0  err= 0.00%  p99= 0.030s  p99 POST= 0.037s  p99 GET(indep)= 0.015s  activas=0
+  baseline   rps=  67.2  err= 0.00%  p99= 0.039s  p99 POST= 0.046s  p99 GET(indep)= 0.033s  activas=1
+  baseline   rps=  66.7  err= 0.00%  p99= 0.041s  p99 POST= 0.047s  p99 GET(indep)= 0.032s  activas=1
+  baseline   rps=  66.8  err= 0.00%  p99= 0.046s  p99 POST= 0.051s  p99 GET(indep)= 0.032s  activas=0
+  baseline   rps=  66.7  err= 0.00%  p99= 0.040s  p99 POST= 0.045s  p99 GET(indep)= 0.014s  activas=0
+  baseline   rps=  66.9  err= 0.00%  p99= 0.043s  p99 POST= 0.051s  p99 GET(indep)= 0.018s  activas=0
+  baseline   rps=  66.7  err= 0.00%  p99= 0.045s  p99 POST= 0.055s  p99 GET(indep)= 0.023s  activas=0
+  baseline   rps=  66.6  err= 0.00%  p99= 0.048s  p99 POST= 0.059s  p99 GET(indep)= 0.023s  activas=1
+  baseline   rps=  66.1  err= 0.00%  p99= 0.051s  p99 POST= 0.062s  p99 GET(indep)= 0.040s  activas=1
+  baseline   rps=  65.7  err= 0.00%  p99= 0.070s  p99 POST= 0.078s  p99 GET(indep)= 0.023s  activas=0
+[22:36:34] Estado estable verificado: err=0% p99=0.06964062499999983s
+[22:36:34] INYECCIÓN: netem delay 100ms ±10ms en service-b → service-a (172.18.0.9)
+[22:36:34] Traza de ejemplo en fase 100ms: 268570265cb6c351c3a30aed203e5f86  (http://localhost:16686/trace/268570265cb6c351c3a30aed203e5f86)
+  100ms      rps=  43.8  err= 0.00%  p99= 0.187s  p99 POST= 0.205s  p99 GET(indep)= 0.018s  activas=5
+  100ms      rps=  43.7  err= 0.00%  p99= 0.246s  p99 POST= 0.247s  p99 GET(indep)= 0.010s  activas=5
+  100ms      rps=  43.2  err= 0.00%  p99= 0.248s  p99 POST= 0.248s  p99 GET(indep)= 0.009s  activas=4
+  100ms      rps=  43.5  err= 0.00%  p99= 0.248s  p99 POST= 0.248s  p99 GET(indep)= 0.025s  activas=7
+  100ms      rps=  44.1  err= 0.00%  p99= 0.248s  p99 POST= 0.249s  p99 GET(indep)= 0.052s  activas=10
+  100ms      rps=  45.3  err= 0.00%  p99= 0.514s  p99 POST= 0.553s  p99 GET(indep)= 0.550s  activas=5
+  100ms      rps=  45.6  err= 0.00%  p99= 0.512s  p99 POST= 0.557s  p99 GET(indep)= 0.248s  activas=6
+  100ms      rps=  44.5  err= 0.00%  p99= 0.249s  p99 POST= 0.250s  p99 GET(indep)= 0.025s  activas=5
+  100ms      rps=  44.4  err= 0.00%  p99= 0.248s  p99 POST= 0.248s  p99 GET(indep)= 0.086s  activas=5
+  100ms      rps=  44.4  err= 0.00%  p99= 0.248s  p99 POST= 0.248s  p99 GET(indep)= 0.085s  activas=5
+  100ms      rps=  43.8  err= 0.00%  p99= 0.248s  p99 POST= 0.248s  p99 GET(indep)= 0.010s  activas=5
+  100ms      rps=  43.3  err= 0.00%  p99= 0.248s  p99 POST= 0.248s  p99 GET(indep)= 0.010s  activas=6
+[22:38:38] INYECCIÓN: netem delay 400ms ±40ms en service-b → service-a (172.18.0.9)
+[22:38:39] Traza de ejemplo en fase 400ms: 60f91a400479dba6cb4902f6ec04561e  (http://localhost:16686/trace/60f91a400479dba6cb4902f6ec04561e)
+  400ms      rps=  43.4  err= 0.00%  p99= 0.249s  p99 POST= 0.249s  p99 GET(indep)= 0.121s  activas=6
+  400ms      rps=  43.1  err= 0.00%  p99= 0.936s  p99 POST= 0.929s  p99 GET(indep)= 0.118s  activas=23
+  400ms      rps=  65.4  err= 0.00%  p99= 0.947s  p99 POST= 0.912s  p99 GET(indep)= 0.023s  activas=23
+  400ms      rps=  66.3  err= 0.00%  p99= 0.929s  p99 POST= 0.679s  p99 GET(indep)= 0.044s  activas=19
+  400ms      rps=  66.1  err= 0.00%  p99= 0.933s  p99 POST= 0.634s  p99 GET(indep)= 0.046s  activas=22
+  400ms      rps=  66.8  err= 0.00%  p99= 0.916s  p99 POST= 0.498s  p99 GET(indep)= 0.041s  activas=21
+  400ms      rps=  66.6  err= 0.00%  p99= 0.899s  p99 POST= 0.498s  p99 GET(indep)= 0.019s  activas=20
+  400ms      rps=  66.8  err= 0.00%  p99= 0.901s  p99 POST= 0.498s  p99 GET(indep)= 0.018s  activas=20
+  400ms      rps=  65.6  err= 0.00%  p99= 0.921s  p99 POST= 0.499s  p99 GET(indep)= 0.037s  activas=19
+  400ms      rps=  65.3  err= 0.00%  p99= 0.930s  p99 POST= 0.498s  p99 GET(indep)= 0.037s  activas=22
+  400ms      rps=  65.6  err= 0.00%  p99= 0.932s  p99 POST= 0.498s  p99 GET(indep)= 0.037s  activas=20
+  400ms      rps=  66.3  err= 0.00%  p99= 0.926s  p99 POST= 0.498s  p99 GET(indep)= 0.014s  activas=18
+[22:40:42] INYECCIÓN: netem delay 1000ms ±100ms en service-b → service-a (172.18.0.9)
+[22:40:43] Traza de ejemplo en fase 1000ms: 84b78a004c31add21ad8160f58c363fb  (http://localhost:16686/trace/84b78a004c31add21ad8160f58c363fb)
+  1000ms     rps=  62.2  err= 0.00%  p99= 2.229s  p99 POST= 2.224s  p99 GET(indep)= 2.262s  activas=117
+  1000ms     rps=  58.6  err= 0.00%  p99= 4.892s  p99 POST= 4.905s  p99 GET(indep)= 4.746s  activas=199
+  1000ms     rps=  51.8  err= 0.00%  p99= 7.330s  p99 POST= 7.317s  p99 GET(indep)= 7.322s  activas=300
+[22:41:14] ABORTO: condición de aborto alcanzada en fase 1000ms (err=0% p99=7.330366492146597s)
+[22:41:14] ROLLBACK: tc qdisc eliminado; red de service-b restaurada
+[22:41:14] FASE recuperación (120s)
+  recuperacion rps=  65.2  err= 0.00%  p99= 7.464s  p99 POST= 7.462s  p99 GET(indep)= 7.435s  activas=27
+[22:41:24] ABORTO: condición de aborto alcanzada en fase recuperacion (err=0% p99=7.46389751552795s)
+[22:41:25] Resultado: experimento ABORTADO por condición de seguridad
+[22:41:25] Timeline: /Users/sergioandresco/Software-Architecture/Final-Project-Software-Architecture/GameDay/results/exp1-timeline.csv
